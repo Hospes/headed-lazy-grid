@@ -13,9 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import ua.hospes.lazygrid.GridCells
-import ua.hospes.lazygrid.LazyVerticalGrid
-import ua.hospes.lazygrid.items
+import ua.hospes.lazygrid.*
 import ua.hospes.sample.ui.theme.LazyGridTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +21,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             LazyGridTheme {
-                Greeting(
+                Grid(
                     items = testItems,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -33,11 +31,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun Greeting(
-    items: List<String>,
+private fun Grid(
     modifier: Modifier = Modifier,
+    items: List<String>,
+    lazyGridState: LazyGridState = rememberLazyGridState(),
 ) {
     LazyVerticalGrid(
+        state = lazyGridState,
         columns = GridCells.Fixed(2),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -94,7 +94,7 @@ private fun Item(
 @Composable
 private fun Preview() {
     LazyGridTheme {
-        Greeting(
+        Grid(
             items = testItems,
             modifier = Modifier.fillMaxSize(),
         )
