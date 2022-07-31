@@ -33,9 +33,7 @@ android {
     buildFeatures {
         compose true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion '1.2.0'
-    }
+    composeOptions { kotlinCompilerExtensionVersion '1.3.0-rc01' }
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
@@ -45,8 +43,8 @@ android {
 
 dependencies {
     implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.activity:activity-compose:1.5.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0'
+    implementation 'androidx.activity:activity-compose:1.5.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
 
     implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.compose.ui:ui-util:$compose_version"
