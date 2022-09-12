@@ -37,7 +37,7 @@ internal class LazyMeasuredItemProvider @ExperimentalFoundationApi constructor(
             key,
             crossAxisSize,
             mainAxisSpacing,
-            placeables
+            placeables,
         )
     }
 
@@ -55,6 +55,6 @@ internal fun interface MeasuredItemFactory {
         key: Any,
         crossAxisSize: Int,
         mainAxisSpacing: Int,
-        placeables: Array<Placeable>
+        placeables: List<Placeable>
     ): LazyMeasuredItem
 }

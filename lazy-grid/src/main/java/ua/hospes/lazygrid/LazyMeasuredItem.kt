@@ -26,7 +26,7 @@ internal class LazyMeasuredItem(
     private val layoutDirection: LayoutDirection,
     private val beforeContentPadding: Int,
     private val afterContentPadding: Int,
-    val placeables: Array<Placeable>,
+    val placeables: List<Placeable>,
     private val placementAnimator: LazyGridItemPlacementAnimator,
     /**
      * The offset which shouldn't affect any calculations but needs to be applied for the final
