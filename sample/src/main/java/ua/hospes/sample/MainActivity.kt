@@ -44,6 +44,13 @@ private fun Grid(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         modifier = modifier,
     ) {
+        items(items = items.take(1)) {
+            Item(
+                item = it,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
         stickyHeader(key = "header") {
             Text(
                 text = "TEST HEADER", modifier = Modifier

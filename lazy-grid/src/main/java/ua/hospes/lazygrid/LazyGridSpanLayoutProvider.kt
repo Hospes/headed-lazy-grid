@@ -89,7 +89,7 @@ internal class LazyGridSpanLayoutProvider(private val itemProvider: LazyGridItem
         ) {
             // It happens that the needed line start is fully cached. Common when scrolling in
             // reverse main axis, as we decided to cacheThisBucket previously.
-            currentItemIndex = cachedBucket[lineIndex - currentLine]
+            currentItemIndex = cachedBucket[(lineIndex - currentLine).coerceAtLeast(0)]
             currentLine = lineIndex
             knownCurrentItemSpan = 0
         }
