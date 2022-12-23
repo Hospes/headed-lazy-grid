@@ -5,12 +5,11 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 @OptIn(ExperimentalFoundationApi::class)
-internal class LazyGridSpanLayoutProvider(private val itemsSnapshot: LazyGridItemsSnapshot) {
+internal class LazyGridSpanLayoutProvider(private val itemProvider: LazyGridItemProvider) {
     class LineConfiguration(val firstItemIndex: Int, val spans: List<GridItemSpan>)
 
     /** Caches the bucket info on lines 0, [bucketSize], 2 * [bucketSize], etc. */
     private val buckets = ArrayList<Bucket>().apply { add(Bucket(0)) }
-
     /**
      * The interval at each we will store the starting element of lines. These will be then
      * used to calculate the layout of arbitrary lines, by starting from the closest
@@ -18,28 +17,22 @@ internal class LazyGridSpanLayoutProvider(private val itemsSnapshot: LazyGridIte
      * of arbitrary lines but the higher memory usage for [buckets].
      */
     private val bucketSize get() = sqrt(1.0 * totalSize / slotsPerLine).toInt() + 1
-
     /** Caches the last calculated line index, useful when scrolling in main axis direction. */
     private var lastLineIndex = 0
-
     /** Caches the starting item index on [lastLineIndex]. */
     private var lastLineStartItemIndex = 0
-
     /** Caches the span of [lastLineStartItemIndex], if this was already calculated. */
     private var lastLineStartKnownSpan = 0
-
     /**
      * Caches a calculated bucket, this is useful when scrolling in reverse main axis
      * direction. We cannot only keep the last element, as we would not know previous max span.
      */
     private var cachedBucketIndex = -1
-
     /**
      * Caches layout of [cachedBucketIndex], this is useful when scrolling in reverse main axis
      * direction. We cannot only keep the last element, as we would not know previous max span.
      */
     private val cachedBucket = mutableListOf<Int>()
-
     /**
      * List of 1x1 spans if we do not have custom spans.
      */
@@ -51,7 +44,7 @@ internal class LazyGridSpanLayoutProvider(private val itemsSnapshot: LazyGridIte
             List(currentSlotsPerLine) { GridItemSpan(1) }.also { previousDefaultSpans = it }
         }
 
-    val totalSize get() = itemsSnapshot.itemsCount
+    val totalSize get() = itemProvider.itemCount
 
     /** The number of slots on one grid line e.g. the number of columns of a vertical grid. */
     var slotsPerLine = 0
@@ -63,15 +56,13 @@ internal class LazyGridSpanLayoutProvider(private val itemsSnapshot: LazyGridIte
         }
 
     fun getLineConfiguration(lineIndex: Int): LineConfiguration {
-        if (!itemsSnapshot.hasCustomSpans) {
+        if (!itemProvider.hasCustomSpans) {
             // Quick return when all spans are 1x1 - in this case we can easily calculate positions.
             val firstItemIndex = lineIndex * slotsPerLine
             return LineConfiguration(
                 firstItemIndex,
-                getDefaultSpans(
-                    slotsPerLine.coerceAtMost(totalSize - firstItemIndex)
-                        .coerceAtLeast(0)
-                )
+                getDefaultSpans(slotsPerLine.coerceAtMost(totalSize - firstItemIndex)
+                    .coerceAtLeast(0))
             )
         }
 
@@ -165,7 +156,7 @@ internal class LazyGridSpanLayoutProvider(private val itemsSnapshot: LazyGridIte
             return LineIndex(0)
         }
         require(itemIndex < totalSize)
-        if (!itemsSnapshot.hasCustomSpans) {
+        if (!itemProvider.hasCustomSpans) {
             return LineIndex(itemIndex / slotsPerLine)
         }
 
@@ -203,7 +194,7 @@ internal class LazyGridSpanLayoutProvider(private val itemsSnapshot: LazyGridIte
         return LineIndex(currentLine)
     }
 
-    private fun spanOf(itemIndex: Int, maxSpan: Int) = with(itemsSnapshot) {
+    private fun spanOf(itemIndex: Int, maxSpan: Int) = with(itemProvider) {
         with(LazyGridItemSpanScopeImpl) {
             maxCurrentLineSpan = maxSpan
             maxLineSpan = slotsPerLine

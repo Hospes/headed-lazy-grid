@@ -1,17 +1,16 @@
 package ua.hospes.lazygrid
 
 import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.util.fastForEach
 
 /**
  * Represents one measured item of the lazy grid. It can in fact consist of multiple placeables
  * if the user emit multiple layout nodes in the item callback.
  */
-@OptIn(ExperimentalFoundationApi::class)
 internal class LazyMeasuredItem(
     val index: ItemIndex,
     val key: Any,
@@ -46,11 +45,11 @@ internal class LazyMeasuredItem(
 
     init {
         var maxMainAxis = 0
-        placeables.forEach {
+        placeables.fastForEach {
             maxMainAxis = maxOf(maxMainAxis, if (isVertical) it.height else it.width)
         }
         mainAxisSize = maxMainAxis
-        mainAxisSizeWithSpacings = maxMainAxis + mainAxisSpacing
+        mainAxisSizeWithSpacings = (maxMainAxis + mainAxisSpacing).coerceAtLeast(0)
     }
 
     /**
@@ -133,7 +132,6 @@ internal class LazyMeasuredItem(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 internal class LazyGridPositionedItem(
     override val offset: IntOffset,
     val placeableOffset: IntOffset,
@@ -154,8 +152,7 @@ internal class LazyGridPositionedItem(
     val placeablesCount: Int get() = wrappers.size
 
     val mainAxisSizeWithSpacings: Int
-        get() =
-            mainAxisSpacing + if (isVertical) size.height else size.width
+        get() = mainAxisSpacing + if (isVertical) size.height else size.width
 
     val lineMainAxisSizeWithSpacings: Int get() = mainAxisSpacing + lineMainAxisSize
 

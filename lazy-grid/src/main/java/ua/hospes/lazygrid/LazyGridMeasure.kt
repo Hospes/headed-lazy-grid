@@ -1,6 +1,5 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.layout.MeasureResult
@@ -17,15 +16,14 @@ import kotlin.math.sign
  * Measures and calculates the positions for the currently visible items. The result is produced
  * as a [LazyGridMeasureResult] which contains all the calculations.
  */
-@OptIn(ExperimentalFoundationApi::class)
 internal fun measureLazyGrid(
     itemsCount: Int,
     measuredLineProvider: LazyMeasuredLineProvider,
     measuredItemProvider: LazyMeasuredItemProvider,
     mainAxisAvailableSize: Int,
-    slotsPerLine: Int,
     beforeContentPadding: Int,
     afterContentPadding: Int,
+    spaceBetweenLines: Int,
     firstVisibleLineIndex: LineIndex,
     firstVisibleLineScrollOffset: Int,
     scrollToBeConsumed: Float,
@@ -37,6 +35,7 @@ internal fun measureLazyGrid(
     reverseLayout: Boolean,
     density: Density,
     placementAnimator: LazyGridItemPlacementAnimator,
+    spanLayoutProvider: LazyGridSpanLayoutProvider,
     layout: (Int, Int, Placeable.PlacementScope.() -> Unit) -> MeasureResult
 ): LazyGridMeasureResult {
     require(beforeContentPadding >= 0)
@@ -77,13 +76,14 @@ internal fun measureLazyGrid(
         // this will contain all the MeasuredItems representing the visible lines
         val visibleLines = mutableListOf<LazyMeasuredLine>()
 
-        // include the start padding so we compose items in the padding area. before starting
-        // scrolling forward we would remove it back
-        currentFirstLineScrollOffset -= beforeContentPadding
-
-        // define min and max offsets (min offset currently includes beforeContentPadding)
-        val minOffset = -beforeContentPadding
+        // define min and max offsets
+        val minOffset = (-beforeContentPadding + if (spaceBetweenLines < 0) spaceBetweenLines else 0).coerceAtLeast(0)
         val maxOffset = mainAxisAvailableSize
+
+        // include the start padding so we compose items in the padding area and neutralise item
+        // spacing (if the spacing is negative this will make sure the previous item is composed)
+        // before starting scrolling forward we will remove it back
+        currentFirstLineScrollOffset += minOffset
 
         // we had scrolled backward or we compose items in the start padding area, which means
         // items before current firstLineScrollOffset should be visible. compose them and update
@@ -95,6 +95,7 @@ internal fun measureLazyGrid(
             currentFirstLineScrollOffset += measuredLine.mainAxisSizeWithSpacings
             currentFirstLineIndex = previous
         }
+
         // if we were scrolled backward, but there were not enough lines before. this means
         // not the whole scroll was consumed
         if (currentFirstLineScrollOffset < minOffset) {
@@ -103,7 +104,7 @@ internal fun measureLazyGrid(
         }
 
         // neutralize previously added start padding as we stopped filling the before content padding
-        currentFirstLineScrollOffset += beforeContentPadding
+        currentFirstLineScrollOffset += minOffset
 
         var index = currentFirstLineIndex
         val maxMainAxis = (maxOffset + afterContentPadding).coerceAtLeast(0)
@@ -118,7 +119,11 @@ internal fun measureLazyGrid(
         // then composing visible lines forward until we fill the whole viewport.
         // we want to have at least one line in visibleItems even if in fact all the items are
         // offscreen, this can happen if the content padding is larger than the available size.
-        while (currentMainAxisOffset <= maxMainAxis || visibleLines.isEmpty()) {
+        while (index.value < itemsCount &&
+            (currentMainAxisOffset < maxMainAxis ||
+                    currentMainAxisOffset <= 0 || // filling beforeContentPadding area
+                    visibleLines.isEmpty())
+        ) {
             val measuredLine = measuredLineProvider.getAndMeasure(index)
             if (measuredLine.isEmpty()) {
                 --index
@@ -174,12 +179,13 @@ internal fun measureLazyGrid(
         }
 
         // the initial offset for lines from visibleLines list
+        require(currentFirstLineScrollOffset >= 0)
         val visibleLinesScrollOffset = -currentFirstLineScrollOffset
         var firstLine = visibleLines.first()
 
         // even if we compose lines to fill before content padding we should ignore lines fully
         // located there for the state's scroll position calculation (first line + first offset)
-        if (beforeContentPadding > 0) {
+        if (beforeContentPadding > 0 || spaceBetweenLines < 0) {
             for (i in visibleLines.indices) {
                 val size = visibleLines[i].mainAxisSizeWithSpacings
                 if (currentFirstLineScrollOffset != 0 && size <= currentFirstLineScrollOffset &&
@@ -236,16 +242,16 @@ internal fun measureLazyGrid(
             consumedScroll = consumedScroll.toInt(),
             layoutWidth = layoutWidth,
             layoutHeight = layoutHeight,
-            slotsPerLine = slotsPerLine,
             reverseLayout = reverseLayout,
             positionedItems = positionedItems,
-            measuredItemProvider = measuredItemProvider
+            measuredItemProvider = measuredItemProvider,
+            spanLayoutProvider = spanLayoutProvider
         )
 
         return LazyGridMeasureResult(
             firstVisibleLine = firstLine,
             firstVisibleLineScrollOffset = currentFirstLineScrollOffset,
-            canScrollForward = currentMainAxisOffset > maxOffset,
+            canScrollForward = index.value < itemsCount || currentMainAxisOffset > maxOffset,
             consumedScroll = consumedScroll,
             measureResult = layout(layoutWidth, layoutHeight) {
                 //positionedItems.fastForEach { it.place(this) }
@@ -274,7 +280,6 @@ internal fun measureLazyGrid(
 /**
  * Calculates [LazyMeasuredLine]s offsets.
  */
-@OptIn(ExperimentalFoundationApi::class)
 private fun calculateItemsOffsets(
     lines: List<LazyMeasuredLine>,
     layoutWidth: Int,
