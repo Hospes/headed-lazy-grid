@@ -1,8 +1,6 @@
 package ua.hospes.lazygrid
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -522,7 +520,6 @@ private fun LazyGridSpanLayoutProvider.firstIndexInLineContaining(index: Int): I
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyGridSpanLayoutProvider.getFirstIndexInNextLineAfterTheLastKnownOne(): Int {
     // first we find the line for the `totalSize - 1` item
     val lineConfiguration = getLineConfiguration(getLineIndexOfItem(totalSize - 1).value)

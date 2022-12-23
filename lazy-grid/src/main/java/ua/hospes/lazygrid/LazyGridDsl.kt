@@ -1,6 +1,5 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Arrangement
@@ -125,7 +124,6 @@ fun LazyHorizontalGrid(
 }
 
 /** Returns prefix sums of column widths. */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun rememberColumnWidthSums(
     columns: GridCells,
@@ -157,7 +155,6 @@ private fun rememberColumnWidthSums(
 }
 
 /** Returns prefix sums of row heights. */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun rememberRowHeightSums(
     rows: GridCells,
@@ -356,7 +353,6 @@ sealed interface LazyGridScope {
      * type will be considered compatible.
      * @param content the content of the header
      */
-    @ExperimentalFoundationApi
     fun stickyHeader(
         key: Any? = null,
         span: (LazyGridItemSpanScope.() -> GridItemSpan) = { GridItemSpan(maxLineSpan) },

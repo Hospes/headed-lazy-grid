@@ -1,6 +1,5 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider
 import androidx.compose.runtime.Composable
@@ -10,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.*
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
 @Suppress("ComposableModifierFactory", "ModifierInspectorInfo")
 @Composable
 internal fun Modifier.lazyLayoutSemantics(

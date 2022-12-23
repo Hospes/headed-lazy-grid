@@ -1,13 +1,11 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.layout.DelegatingLazyLayoutItemProvider
 import androidx.compose.foundation.lazy.layout.IntervalList
 import androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider
 import androidx.compose.foundation.lazy.layout.rememberLazyNearestItemsRangeState
 import androidx.compose.runtime.*
 
-@ExperimentalFoundationApi
 internal interface LazyGridItemProvider : LazyLayoutItemProvider {
     val spanLayoutProvider: LazyGridSpanLayoutProvider
     val hasCustomSpans: Boolean
@@ -18,7 +16,6 @@ internal interface LazyGridItemProvider : LazyLayoutItemProvider {
     val headerIndexes: List<Int>
 }
 
-@ExperimentalFoundationApi
 @Composable
 internal fun rememberItemProvider(
     state: LazyGridState,
@@ -60,21 +57,9 @@ internal fun rememberItemProvider(
             override val headerIndexes: List<Int>
                 get() = itemProviderState.value.headerIndexes
         }
-//        LazyGridItemProviderImpl(
-//            derivedStateOf {
-//                val listScope = LazyGridScopeImpl().apply(latestContent.value)
-//                LazyGridItemsSnapshot(
-//                    listScope.intervals,
-//                    listScope.headerIndexes,
-//                    listScope.hasCustomSpans,
-//                    nearestItemsRangeState.value
-//                )
-//            }
-//        )
     }
 }
 
-@ExperimentalFoundationApi
 private class LazyGridItemProviderImpl(
     private val intervals: IntervalList<LazyGridIntervalContent>,
     override val headerIndexes: List<Int>,

@@ -1,6 +1,5 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollScope
@@ -54,7 +53,6 @@ fun rememberLazyGridState(
  * @param firstVisibleItemScrollOffset the initial value for
  * [LazyGridState.firstVisibleItemScrollOffset]
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Stable
 class LazyGridState constructor(
     firstVisibleItemIndex: Int = 0,
@@ -252,9 +250,9 @@ class LazyGridState constructor(
     override val isScrollInProgress: Boolean
         get() = scrollableState.isScrollInProgress
 
-    var canScrollForward: Boolean by mutableStateOf(false)
+    override var canScrollForward: Boolean by mutableStateOf(false)
         private set
-    var canScrollBackward: Boolean by mutableStateOf(false)
+    override var canScrollBackward: Boolean by mutableStateOf(false)
         private set
 
     // TODO: Coroutine scrolling APIs will allow this to be private again once we have more

@@ -1,7 +1,6 @@
 package ua.hospes.lazygrid
 
 import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,7 +16,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 
-@OptIn(ExperimentalFoundationApi::class)
 internal object LazyGridItemScopeImpl : LazyGridItemScope {
 
     var maxWidth: Dp by mutableStateOf(Dp.Unspecified)
@@ -33,8 +31,7 @@ internal object LazyGridItemScopeImpl : LazyGridItemScope {
 
     override fun Modifier.fillParentMaxHeight(fraction: Float) =
         height(maxHeight * fraction)
-    
-    @ExperimentalFoundationApi
+
     override fun Modifier.animateItemPlacement(animationSpec: FiniteAnimationSpec<IntOffset>) =
         this.then(AnimateItemPlacementModifier(animationSpec, debugInspectorInfo {
             name = "animateItemPlacement"

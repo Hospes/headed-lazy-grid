@@ -4,7 +4,6 @@ import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.grid.LazyGridScopeMarker
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
@@ -73,7 +72,6 @@ sealed interface LazyGridItemScope {
      *
      * @param animationSpec a finite animation that will be used to animate the item placement.
      */
-    @ExperimentalFoundationApi
     fun Modifier.animateItemPlacement(
         animationSpec: FiniteAnimationSpec<IntOffset> = spring(
             stiffness = Spring.StiffnessMediumLow,

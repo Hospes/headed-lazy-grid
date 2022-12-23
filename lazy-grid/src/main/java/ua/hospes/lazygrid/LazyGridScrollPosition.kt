@@ -1,6 +1,5 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,7 +10,6 @@ import androidx.compose.runtime.snapshots.Snapshot
  * Contains the current scroll position represented by the first visible item index and the first
  * visible item scroll offset.
  */
-@OptIn(ExperimentalFoundationApi::class)
 internal class LazyGridScrollPosition(
     initialIndex: Int = 0,
     initialScrollOffset: Int = 0
@@ -99,7 +97,6 @@ internal class LazyGridScrollPosition(
  * Finds a position of the item with the given key in the lists. This logic allows us to
  * detect when there were items added or removed before our current first item.
  */
-@ExperimentalFoundationApi
 private fun LazyLayoutItemProvider.findIndexByKey(
     key: Any?,
     lastKnownIndex: Int,

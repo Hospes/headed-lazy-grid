@@ -1,6 +1,5 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.grid.LazyGridScopeMarker
 import androidx.compose.runtime.Immutable
 
@@ -14,7 +13,6 @@ value class GridItemSpan internal constructor(private val packedValue: Long) {
      * The span of the item on the current line. This will be the horizontal span for items of
      * [LazyVerticalGrid].
      */
-    @ExperimentalFoundationApi
     val currentLineSpan: Int get() = packedValue.toInt()
 }
 

@@ -1,6 +1,7 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.checkScrollableContainerConstraints
+import androidx.compose.foundation.clipScrollableContainer
 import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollableDefaults
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.lazy.layout.LazyLayout
 import androidx.compose.foundation.lazy.layout.LazyLayoutMeasureScope
+import androidx.compose.foundation.overscroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -21,7 +23,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.util.fastForEach
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun LazyGrid(
     /** Modifier to be applied for the inner layout */
@@ -108,7 +109,6 @@ internal fun LazyGrid(
 }
 
 /** Extracted to minimize the recomposition scope */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ScrollPositionUpdater(
     itemProvider: LazyGridItemProvider,
@@ -119,7 +119,6 @@ private fun ScrollPositionUpdater(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun rememberLazyGridMeasurePolicy(
     /** Items provider of the list. */

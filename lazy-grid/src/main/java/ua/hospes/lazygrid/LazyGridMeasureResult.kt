@@ -1,6 +1,5 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.unit.IntSize
@@ -8,7 +7,6 @@ import androidx.compose.ui.unit.IntSize
 /**
  * The result of the measure pass for lazy list layout.
  */
-@OptIn(ExperimentalFoundationApi::class)
 internal class LazyGridMeasureResult(
     // properties defining the scroll position:
     /** The new first visible line of items.*/

@@ -1,12 +1,10 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.ui.unit.Constraints
 
 /**
  * Abstracts away subcomposition and span calculation from the measuring logic of entire lines.
  */
-@OptIn(ExperimentalFoundationApi::class)
 internal class LazyMeasuredLineProvider(
     private val isVertical: Boolean,
     private val slotSizesSums: List<Int>,
