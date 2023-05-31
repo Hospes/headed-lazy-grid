@@ -3,9 +3,7 @@
 pluginManagement {
     repositories {
         google()
-        mavenCentral()
         gradlePluginPortal()
-        maven { url = uri("https://plugins.gradle.org/m2/") }
     }
 }
 dependencyResolutionManagement {
@@ -13,9 +11,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://maven.google.com/") }
     }
 }
+
 rootProject.name = "LazyGrid"
 
-include(":sample", ":lazy-grid")
+include(":lazy-grid", ":sample")
