@@ -24,9 +24,13 @@ android {
 
 publishing {
     publications {
-        create<MavenPublication>("maven") {
+        register<MavenPublication>("release") {
             groupId = "com.github.Hospes"
             artifactId = "headed-lazy-grid"
+
+            afterEvaluate {
+                from(components["release"])
+            }
         }
     }
 }
