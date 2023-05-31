@@ -6,7 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.*
+import androidx.compose.ui.semantics.CollectionInfo
+import androidx.compose.ui.semantics.ScrollAxisRange
+import androidx.compose.ui.semantics.collectionInfo
+import androidx.compose.ui.semantics.horizontalScrollAxisRange
+import androidx.compose.ui.semantics.indexForKey
+import androidx.compose.ui.semantics.scrollBy
+import androidx.compose.ui.semantics.scrollToIndex
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.verticalScrollAxisRange
 import kotlinx.coroutines.launch
 
 @Suppress("ComposableModifierFactory", "ModifierInspectorInfo")
@@ -15,7 +23,8 @@ internal fun Modifier.lazyLayoutSemantics(
     itemProvider: LazyLayoutItemProvider,
     state: LazyLayoutSemanticState,
     orientation: Orientation,
-    userScrollEnabled: Boolean
+    userScrollEnabled: Boolean,
+    reverseScrolling: Boolean,
 ): Modifier {
     val coroutineScope = rememberCoroutineScope()
     return this.then(
@@ -37,7 +46,26 @@ internal fun Modifier.lazyLayoutSemantics(
                 result
             }
 
-            val accessibilityScrollState = state.scrollAxisRange()
+            val accessibilityScrollState = ScrollAxisRange(
+                value = {
+                    // This is a simple way of representing the current position without
+                    // needing any lazy items to be measured. It's good enough so far, because
+                    // screen-readers care mostly about whether scroll position changed or not
+                    // rather than the actual offset in pixels.
+                    state.currentPosition
+                },
+                maxValue = {
+                    if (state.canScrollForward) {
+                        // If we can scroll further, we don't know the end yet,
+                        // but it's upper bounded by #items + 1
+                        itemProvider.itemCount + 1f
+                    } else {
+                        // If we can't scroll further, the current value is the max
+                        state.currentPosition
+                    }
+                },
+                reverseScrolling = reverseScrolling
+            )
 
             val scrollByAction: ((x: Float, y: Float) -> Boolean)? = if (userScrollEnabled) {
                 { x, y ->
@@ -97,7 +125,8 @@ internal fun Modifier.lazyLayoutSemantics(
 }
 
 internal interface LazyLayoutSemanticState {
-    fun scrollAxisRange(): ScrollAxisRange
+    val currentPosition: Float
+    val canScrollForward: Boolean
     fun collectionInfo(): CollectionInfo
     suspend fun animateScrollBy(delta: Float)
     suspend fun scrollToItem(index: Int)

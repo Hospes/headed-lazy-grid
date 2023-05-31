@@ -20,7 +20,13 @@ import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
 import androidx.compose.ui.util.fastForEach
 
 @Composable
@@ -52,7 +58,7 @@ internal fun LazyGrid(
 
     val itemProvider = rememberItemProvider(state, content)
 
-    val semanticState = rememberLazyGridSemanticState(state, itemProvider, reverseLayout)
+    val semanticState = rememberLazyGridSemanticState(state, reverseLayout)
 
     val scope = rememberCoroutineScope()
     val placementAnimator = remember(state, isVertical) {
@@ -85,7 +91,8 @@ internal fun LazyGrid(
                 itemProvider = itemProvider,
                 state = semanticState,
                 orientation = orientation,
-                userScrollEnabled = userScrollEnabled
+                userScrollEnabled = userScrollEnabled,
+                reverseScrolling = reverseLayout,
             )
             .clipScrollableContainer(orientation)
             .overscroll(overscrollEffect)
@@ -234,7 +241,7 @@ private fun rememberLazyGridMeasurePolicy(
             this,
             spaceBetweenLines
         ) { index, key, crossAxisSize, mainAxisSpacing, placeables ->
-            LazyMeasuredItem(
+            LazyGridMeasuredItem(
                 index = index,
                 key = key,
                 isVertical = isVertical,
@@ -258,7 +265,7 @@ private fun rememberLazyGridMeasurePolicy(
             measuredItemProvider,
             spanLayoutProvider
         ) { index, items, spans, mainAxisSpacing ->
-            LazyMeasuredLine(
+            LazyGridMeasuredLine(
                 index = index,
                 items = items,
                 spans = spans,
@@ -301,6 +308,7 @@ private fun rememberLazyGridMeasurePolicy(
         }
         measureLazyGrid(
             itemsCount = itemsCount,
+            itemProvider = itemProvider,
             measuredLineProvider = measuredLineProvider,
             measuredItemProvider = measuredItemProvider,
             mainAxisAvailableSize = mainAxisAvailableSize,
@@ -319,6 +327,7 @@ private fun rememberLazyGridMeasurePolicy(
             density = this,
             placementAnimator = placementAnimator,
             spanLayoutProvider = itemProvider.spanLayoutProvider,
+            pinnedItems = state.pinnedItems,
             layout = { width, height, placement ->
                 layout(
                     containerConstraints.constrainWidth(width + totalHorizontalPadding),

@@ -82,13 +82,13 @@ internal fun findOrComposeLazyGridHeader(
     var headerCrossAxisOffset = currentHeaderCrossAxisOffset
 
     return measuredHeaderItem.position(
-        rawMainAxisOffset = headerOffset,
-        rawCrossAxisOffset = 0,//headerCrossAxisOffset,
+        mainAxisOffset = headerOffset,
+        crossAxisOffset = 0,//headerCrossAxisOffset,
         layoutWidth = layoutWidth,
         layoutHeight = layoutHeight,
         row = LazyGridItemInfo.UnknownRow,
         column = LazyGridItemInfo.UnknownColumn,
-        lineMainAxisSize = measuredHeaderItem.mainAxisSize
+        //lineMainAxisSize = measuredHeaderItem.mainAxisSize
     ).also {
         if (indexInComposedVisibleItems != -1) {
             composedVisibleItems[indexInComposedVisibleItems] = it

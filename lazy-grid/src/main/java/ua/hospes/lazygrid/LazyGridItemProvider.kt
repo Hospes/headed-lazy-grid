@@ -3,8 +3,13 @@ package ua.hospes.lazygrid
 import androidx.compose.foundation.lazy.layout.DelegatingLazyLayoutItemProvider
 import androidx.compose.foundation.lazy.layout.IntervalList
 import androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider
+import androidx.compose.foundation.lazy.layout.LazyLayoutPinnableItem
 import androidx.compose.foundation.lazy.layout.rememberLazyNearestItemsRangeState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 
 internal interface LazyGridItemProvider : LazyLayoutItemProvider {
     val spanLayoutProvider: LazyGridSpanLayoutProvider
@@ -37,6 +42,7 @@ internal fun rememberItemProvider(
                 gridScope.intervals,
                 gridScope.headerIndexes,
                 gridScope.hasCustomSpans,
+                state,
                 nearestItemsRangeState.value
             )
         }
@@ -64,11 +70,21 @@ private class LazyGridItemProviderImpl(
     private val intervals: IntervalList<LazyGridIntervalContent>,
     override val headerIndexes: List<Int>,
     override val hasCustomSpans: Boolean,
+    state: LazyGridState,
     nearestItemsRange: IntRange
 ) : LazyGridItemProvider, LazyLayoutItemProvider by LazyLayoutItemProvider(
     intervals = intervals,
     nearestItemsRange = nearestItemsRange,
-    itemContent = { interval, index -> interval.item.invoke(LazyGridItemScopeImpl, index) }
+    itemContent = { interval, index ->
+        val localIndex = index - interval.startIndex
+        LazyLayoutPinnableItem(
+            key = interval.value.key?.invoke(localIndex),
+            index = index,
+            pinnedItemList = state.pinnedItems
+        ) {
+            interval.value.item.invoke(LazyGridItemScopeImpl, localIndex)
+        }
+    }
 ) {
     override val spanLayoutProvider: LazyGridSpanLayoutProvider = LazyGridSpanLayoutProvider(this)
 

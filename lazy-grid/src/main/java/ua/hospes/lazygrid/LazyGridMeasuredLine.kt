@@ -7,9 +7,9 @@ import androidx.compose.ui.unit.LayoutDirection
  * Represents one measured line of the lazy list. Each item on the line can in fact consist of
  * multiple placeables if the user emit multiple layout nodes in the item callback.
  */
-internal class LazyMeasuredLine constructor(
+internal class LazyGridMeasuredLine constructor(
     val index: LineIndex,
-    val items: Array<LazyMeasuredItem>,
+    val items: Array<LazyGridMeasuredItem>,
     private val spans: List<GridItemSpan>,
     private val isVertical: Boolean,
     private val slotsPerLine: Int,
@@ -64,13 +64,12 @@ internal class LazyMeasuredLine constructor(
             }
 
             item.position(
-                rawMainAxisOffset = offset,
-                rawCrossAxisOffset = usedCrossAxis,
+                mainAxisOffset = offset,
+                crossAxisOffset = usedCrossAxis,
                 layoutWidth = layoutWidth,
                 layoutHeight = layoutHeight,
                 row = if (isVertical) index.value else startSlot,
-                column = if (isVertical) startSlot else index.value,
-                lineMainAxisSize = mainAxisSize
+                column = if (isVertical) startSlot else index.value
             ).also {
                 usedCrossAxis += item.crossAxisSize + crossAxisSpacing
                 usedSpan += span

@@ -97,7 +97,7 @@ internal class LazyGridScrollPosition(
  * Finds a position of the item with the given key in the lists. This logic allows us to
  * detect when there were items added or removed before our current first item.
  */
-private fun LazyLayoutItemProvider.findIndexByKey(
+fun LazyLayoutItemProvider.findIndexByKey(
     key: Any?,
     lastKnownIndex: Int,
 ): Int {
