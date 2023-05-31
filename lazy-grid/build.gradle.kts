@@ -1,4 +1,5 @@
 plugins {
+    `maven-publish`
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
 }
@@ -18,6 +19,15 @@ android {
         freeCompilerArgs += listOf(
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
         )
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.github.Hospes"
+            artifactId = "headed-lazy-grid"
+        }
     }
 }
 
