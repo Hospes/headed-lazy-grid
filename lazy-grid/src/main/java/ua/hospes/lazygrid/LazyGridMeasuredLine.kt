@@ -1,24 +1,21 @@
 package ua.hospes.lazygrid
 
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.ui.unit.LayoutDirection
 
 /**
  * Represents one measured line of the lazy list. Each item on the line can in fact consist of
  * multiple placeables if the user emit multiple layout nodes in the item callback.
  */
 internal class LazyGridMeasuredLine constructor(
-    val index: LineIndex,
+    val index: Int,
     val items: Array<LazyGridMeasuredItem>,
+    private val slots: LazyGridSlots,
     private val spans: List<GridItemSpan>,
     private val isVertical: Boolean,
-    private val slotsPerLine: Int,
-    private val layoutDirection: LayoutDirection,
     /**
      * Spacing to be added after [mainAxisSize], in the main axis direction.
      */
     private val mainAxisSpacing: Int,
-    private val crossAxisSpacing: Int
 ) {
     /**
      * Main axis size of the line - the max main axis size of the items on the line.
@@ -53,25 +50,19 @@ internal class LazyGridMeasuredLine constructor(
         layoutWidth: Int,
         layoutHeight: Int
     ): List<LazyGridPositionedItem> {
-        var usedCrossAxis = 0
         var usedSpan = 0
         return items.mapIndexed { itemIndex, item ->
             val span = spans[itemIndex].currentLineSpan
-            val startSlot = if (layoutDirection == LayoutDirection.Rtl) {
-                slotsPerLine - usedSpan - span
-            } else {
-                usedSpan
-            }
+            val startSlot = usedSpan
 
             item.position(
                 mainAxisOffset = offset,
-                crossAxisOffset = usedCrossAxis,
+                crossAxisOffset = slots.positions[startSlot],
                 layoutWidth = layoutWidth,
                 layoutHeight = layoutHeight,
-                row = if (isVertical) index.value else startSlot,
-                column = if (isVertical) startSlot else index.value
+                row = if (isVertical) index else startSlot,
+                column = if (isVertical) startSlot else index
             ).also {
-                usedCrossAxis += item.crossAxisSize + crossAxisSpacing
                 usedSpan += span
             }
         }

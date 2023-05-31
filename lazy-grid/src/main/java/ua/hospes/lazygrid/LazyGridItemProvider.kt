@@ -1,98 +1,71 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.lazy.layout.DelegatingLazyLayoutItemProvider
-import androidx.compose.foundation.lazy.layout.IntervalList
 import androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider
 import androidx.compose.foundation.lazy.layout.LazyLayoutPinnableItem
-import androidx.compose.foundation.lazy.layout.rememberLazyNearestItemsRangeState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 
 internal interface LazyGridItemProvider : LazyLayoutItemProvider {
+    val keyIndexMap: LazyLayoutKeyIndexMap
     val spanLayoutProvider: LazyGridSpanLayoutProvider
-    val hasCustomSpans: Boolean
-
-    fun LazyGridItemSpanScope.getSpan(index: Int): GridItemSpan
 
     /** The list of indexes of the sticky header items */
     val headerIndexes: List<Int>
 }
 
 @Composable
-internal fun rememberItemProvider(
+internal fun rememberLazyGridItemProvider(
     state: LazyGridState,
     content: LazyGridScope.() -> Unit,
 ): LazyGridItemProvider {
     val latestContent = rememberUpdatedState(content)
-    val nearestItemsRangeState = rememberLazyNearestItemsRangeState(
-        firstVisibleItemIndex = remember(state) {
-            { state.firstVisibleItemIndex }
-        },
-        slidingWindowSize = { NearestItemsSlidingWindowSize },
-        extraItemCount = { NearestItemsExtraItemCount }
-    )
-
-    return remember(nearestItemsRangeState) {
-        val itemProviderState: State<LazyGridItemProvider> = derivedStateOf {
-            val gridScope = LazyGridScopeImpl().apply(latestContent.value)
-            LazyGridItemProviderImpl(
-                gridScope.intervals,
-                gridScope.headerIndexes,
-                gridScope.hasCustomSpans,
-                state,
-                nearestItemsRangeState.value
-            )
-        }
-
-        object : LazyGridItemProvider,
-            LazyLayoutItemProvider by DelegatingLazyLayoutItemProvider(itemProviderState) {
-            override val spanLayoutProvider: LazyGridSpanLayoutProvider
-                get() = itemProviderState.value.spanLayoutProvider
-
-            override val hasCustomSpans: Boolean
-                get() = itemProviderState.value.hasCustomSpans
-
-            override fun LazyGridItemSpanScope.getSpan(index: Int): GridItemSpan =
-                with(itemProviderState.value) {
-                    getSpan(index)
-                }
-
-            override val headerIndexes: List<Int>
-                get() = itemProviderState.value.headerIndexes
-        }
+    return remember(state) {
+        LazyGridItemProviderImpl(
+            state = state,
+            latestContent = { latestContent.value },
+        )
     }
 }
 
 private class LazyGridItemProviderImpl(
-    private val intervals: IntervalList<LazyGridIntervalContent>,
-    override val headerIndexes: List<Int>,
-    override val hasCustomSpans: Boolean,
-    state: LazyGridState,
-    nearestItemsRange: IntRange
-) : LazyGridItemProvider, LazyLayoutItemProvider by LazyLayoutItemProvider(
-    intervals = intervals,
-    nearestItemsRange = nearestItemsRange,
-    itemContent = { interval, index ->
-        val localIndex = index - interval.startIndex
-        LazyLayoutPinnableItem(
-            key = interval.value.key?.invoke(localIndex),
-            index = index,
-            pinnedItemList = state.pinnedItems
-        ) {
-            interval.value.item.invoke(LazyGridItemScopeImpl, localIndex)
+    private val state: LazyGridState,
+    private val latestContent: () -> (LazyGridScope.() -> Unit)
+) : LazyGridItemProvider {
+    private val gridContent by derivedStateOf(referentialEqualityPolicy()) {
+        LazyGridIntervalContent(latestContent())
+    }
+
+    override val keyIndexMap: LazyLayoutKeyIndexMap by NearestRangeKeyIndexMapState(
+        firstVisibleItemIndex = { state.firstVisibleItemIndex },
+        slidingWindowSize = { NearestItemsSlidingWindowSize },
+        extraItemCount = { NearestItemsExtraItemCount },
+        content = { gridContent }
+    )
+
+    override val itemCount: Int get() = gridContent.itemCount
+    override val headerIndexes: List<Int> get() = gridContent.headerIndexes
+
+    override fun getKey(index: Int): Any = keyIndexMap.getKey(index) ?: gridContent.getKey(index)
+
+    override fun getContentType(index: Int): Any? = gridContent.getContentType(index)
+
+    @Composable
+    override fun Item(index: Int, key: Any) {
+        LazyLayoutPinnableItem(key, index, state.pinnedItems) {
+            gridContent.withInterval(index) { localIndex, content ->
+                content.item(LazyGridItemScopeImpl, localIndex)
+            }
         }
     }
-) {
-    override val spanLayoutProvider: LazyGridSpanLayoutProvider = LazyGridSpanLayoutProvider(this)
 
-    override fun LazyGridItemSpanScope.getSpan(index: Int): GridItemSpan {
-        val interval = intervals[index]
-        val localIntervalIndex = index - interval.startIndex
-        return interval.value.span.invoke(this, localIntervalIndex)
-    }
+    override val spanLayoutProvider: LazyGridSpanLayoutProvider
+        get() = gridContent.spanLayoutProvider
+
+    override fun getIndex(key: Any): Int = keyIndexMap.getIndex(key)
 }
 
 /**

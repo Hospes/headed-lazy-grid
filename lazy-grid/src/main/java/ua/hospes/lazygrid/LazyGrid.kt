@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.layout.LazyLayoutMeasureScope
 import androidx.compose.foundation.overscroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.MeasureResult
@@ -36,7 +35,7 @@ internal fun LazyGrid(
     /** State controlling the scroll position */
     state: LazyGridState,
     /** Prefix sums of cross axis sizes of slots per line, e.g. the columns for vertical grid. */
-    slotSizesSums: Density.(Constraints) -> List<Int>,
+    slots: Density.(Constraints) -> LazyGridSlots,
     /** The inner padding to be added for the whole content (not for each individual item) */
     contentPadding: PaddingValues = PaddingValues(0.dp),
     /** reverse the direction of scrolling and layout */
@@ -56,26 +55,19 @@ internal fun LazyGrid(
 ) {
     val overscrollEffect = ScrollableDefaults.overscrollEffect()
 
-    val itemProvider = rememberItemProvider(state, content)
+    val itemProvider = rememberLazyGridItemProvider(state, content)
 
     val semanticState = rememberLazyGridSemanticState(state, reverseLayout)
-
-    val scope = rememberCoroutineScope()
-    val placementAnimator = remember(state, isVertical) {
-        LazyGridItemPlacementAnimator(scope, isVertical)
-    }
-    state.placementAnimator = placementAnimator
 
     val measurePolicy = rememberLazyGridMeasurePolicy(
         itemProvider,
         state,
-        slotSizesSums,
+        slots,
         contentPadding,
         reverseLayout,
         isVertical,
         horizontalArrangement,
         verticalArrangement,
-        placementAnimator
     )
 
     state.isVertical = isVertical
@@ -126,6 +118,12 @@ private fun ScrollPositionUpdater(
     }
 }
 
+/** lazy grid slots configuration */
+internal class LazyGridSlots(
+    val sizes: IntArray,
+    val positions: IntArray
+)
+
 @Composable
 private fun rememberLazyGridMeasurePolicy(
     /** Items provider of the list. */
@@ -133,7 +131,7 @@ private fun rememberLazyGridMeasurePolicy(
     /** The state of the list. */
     state: LazyGridState,
     /** Prefix sums of cross axis sizes of slots of the grid. */
-    slotSizesSums: Density.(Constraints) -> List<Int>,
+    slots: Density.(Constraints) -> LazyGridSlots,
     /** The inner padding to be added for the whole content(nor for each individual item) */
     contentPadding: PaddingValues,
     /** reverse the direction of scrolling and layout */
@@ -144,17 +142,14 @@ private fun rememberLazyGridMeasurePolicy(
     horizontalArrangement: Arrangement.Horizontal? = null,
     /** The vertical arrangement for items. Required when isVertical is true */
     verticalArrangement: Arrangement.Vertical? = null,
-    /** Item placement animator. Should be notified with the measuring result */
-    placementAnimator: LazyGridItemPlacementAnimator
 ) = remember<LazyLayoutMeasureScope.(Constraints) -> MeasureResult>(
     state,
-    slotSizesSums,
+    slots,
     contentPadding,
     reverseLayout,
     isVertical,
     horizontalArrangement,
     verticalArrangement,
-    placementAnimator
 ) {
     { containerConstraints ->
         checkScrollableContainerConstraints(
@@ -196,12 +191,13 @@ private fun rememberLazyGridMeasurePolicy(
         state.updateScrollPositionIfTheFirstItemWasMoved(itemProvider)
 
         val spanLayoutProvider = itemProvider.spanLayoutProvider
-        val resolvedSlotSizesSums = slotSizesSums(containerConstraints)
-        spanLayoutProvider.slotsPerLine = resolvedSlotSizesSums.size
+        val resolvedSlots = slots(containerConstraints)
+        val slotsPerLine = resolvedSlots.sizes.size
+        spanLayoutProvider.slotsPerLine = slotsPerLine
 
         // Update the state's cached Density and slotsPerLine
         state.density = this
-        state.slotsPerLine = resolvedSlotSizesSums.size
+        state.slotsPerLine = slotsPerLine
 
         val spaceBetweenLinesDp = if (isVertical) {
             requireNotNull(verticalArrangement).spacing
@@ -209,13 +205,6 @@ private fun rememberLazyGridMeasurePolicy(
             requireNotNull(horizontalArrangement).spacing
         }
         val spaceBetweenLines = spaceBetweenLinesDp.roundToPx()
-        val spaceBetweenSlotsDp = if (isVertical) {
-            horizontalArrangement?.spacing ?: 0.dp
-        } else {
-            verticalArrangement?.spacing ?: 0.dp
-        }
-        val spaceBetweenSlots = spaceBetweenSlotsDp.roundToPx()
-
         val itemsCount = itemProvider.itemCount
 
         // can be negative if the content padding is larger than the max size from constraints
@@ -236,11 +225,11 @@ private fun rememberLazyGridMeasurePolicy(
             )
         }
 
-        val measuredItemProvider = LazyMeasuredItemProvider(
+        val measuredItemProvider = LazyGridMeasuredItemProvider(
             itemProvider,
             this,
             spaceBetweenLines
-        ) { index, key, crossAxisSize, mainAxisSpacing, placeables ->
+        ) { index, key, contentType, crossAxisSize, mainAxisSpacing, placeables ->
             LazyGridMeasuredItem(
                 index = index,
                 key = key,
@@ -253,44 +242,41 @@ private fun rememberLazyGridMeasurePolicy(
                 afterContentPadding = afterContentPadding,
                 visualOffset = visualItemOffset,
                 placeables = placeables,
-                placementAnimator = placementAnimator
+                contentType = contentType
             )
         }
-        val measuredLineProvider = LazyMeasuredLineProvider(
-            isVertical,
-            resolvedSlotSizesSums,
-            spaceBetweenSlots,
-            itemsCount,
-            spaceBetweenLines,
-            measuredItemProvider,
-            spanLayoutProvider
+        val measuredLineProvider = LazyGridMeasuredLineProvider(
+            isVertical = isVertical,
+            slots = resolvedSlots,
+            gridItemsCount = itemsCount,
+            spaceBetweenLines = spaceBetweenLines,
+            measuredItemProvider = measuredItemProvider,
+            spanLayoutProvider = spanLayoutProvider
         ) { index, items, spans, mainAxisSpacing ->
             LazyGridMeasuredLine(
                 index = index,
                 items = items,
                 spans = spans,
+                slots = resolvedSlots,
                 isVertical = isVertical,
-                slotsPerLine = resolvedSlotSizesSums.size,
-                layoutDirection = layoutDirection,
                 mainAxisSpacing = mainAxisSpacing,
-                crossAxisSpacing = spaceBetweenSlots
             )
         }
         state.prefetchInfoRetriever = { line ->
-            val lineConfiguration = spanLayoutProvider.getLineConfiguration(line.value)
-            var index = ItemIndex(lineConfiguration.firstItemIndex)
+            val lineConfiguration = spanLayoutProvider.getLineConfiguration(line)
+            var index = lineConfiguration.firstItemIndex
             var slot = 0
             val result = ArrayList<Pair<Int, Constraints>>(lineConfiguration.spans.size)
             lineConfiguration.spans.fastForEach {
                 val span = it.currentLineSpan
-                result.add(index.value to measuredLineProvider.childConstraints(slot, span))
+                result.add(index to measuredLineProvider.childConstraints(slot, span))
                 ++index
                 slot += span
             }
             result
         }
 
-        val firstVisibleLineIndex: LineIndex
+        val firstVisibleLineIndex: Int
         val firstVisibleLineScrollOffset: Int
 
         Snapshot.withoutReadObservation {
@@ -306,9 +292,14 @@ private fun rememberLazyGridMeasurePolicy(
                 firstVisibleLineScrollOffset = 0
             }
         }
+
+        val pinnedItems = itemProvider.calculateLazyLayoutPinnedIndices(
+            state.pinnedItems,
+            state.beyondBoundsInfo
+        )
+
         measureLazyGrid(
             itemsCount = itemsCount,
-            itemProvider = itemProvider,
             measuredLineProvider = measuredLineProvider,
             measuredItemProvider = measuredItemProvider,
             mainAxisAvailableSize = mainAxisAvailableSize,
@@ -325,9 +316,9 @@ private fun rememberLazyGridMeasurePolicy(
             horizontalArrangement = horizontalArrangement,
             reverseLayout = reverseLayout,
             density = this,
-            placementAnimator = placementAnimator,
-            spanLayoutProvider = itemProvider.spanLayoutProvider,
-            pinnedItems = state.pinnedItems,
+            placementAnimator = state.placementAnimator,
+            spanLayoutProvider = spanLayoutProvider,
+            pinnedItems = pinnedItems,
             layout = { width, height, placement ->
                 layout(
                     containerConstraints.constrainWidth(width + totalHorizontalPadding),

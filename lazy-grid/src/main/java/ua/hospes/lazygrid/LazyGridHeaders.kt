@@ -14,7 +14,7 @@ import androidx.compose.ui.util.fastForEachIndexed
  */
 internal fun findOrComposeLazyGridHeader(
     composedVisibleItems: MutableList<LazyGridPositionedItem>,
-    measuredItemProvider: LazyMeasuredItemProvider,
+    measuredItemProvider: LazyGridMeasuredItemProvider,
     headerIndexes: List<Int>,
     isVertical: Boolean,
     beforeContentPadding: Int,
@@ -61,7 +61,7 @@ internal fun findOrComposeLazyGridHeader(
     }
 
     val measuredHeaderItem = measuredItemProvider.getAndMeasure(
-        index = ItemIndex(currentHeaderListPosition),
+        index = currentHeaderListPosition,
         constraints = if (isVertical) {
             Constraints.fixedWidth(layoutWidth)
         } else {

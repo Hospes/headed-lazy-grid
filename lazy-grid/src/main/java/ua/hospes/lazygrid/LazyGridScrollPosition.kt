@@ -2,7 +2,7 @@ package ua.hospes.lazygrid
 
 import androidx.compose.foundation.lazy.layout.LazyLayoutItemProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 
@@ -14,10 +14,10 @@ internal class LazyGridScrollPosition(
     initialIndex: Int = 0,
     initialScrollOffset: Int = 0
 ) {
-    var index by mutableStateOf(ItemIndex(initialIndex))
+    var index by mutableIntStateOf(initialIndex)
         private set
 
-    var scrollOffset by mutableStateOf(initialScrollOffset)
+    var scrollOffset by mutableIntStateOf(initialScrollOffset)
         private set
 
     private var hadFirstNotEmptyLayout = false
@@ -40,9 +40,7 @@ internal class LazyGridScrollPosition(
 
             Snapshot.withoutReadObservation {
                 update(
-                    ItemIndex(
-                        measureResult.firstVisibleLine?.items?.firstOrNull()?.index?.value ?: 0
-                    ),
+                    measureResult.firstVisibleLine?.items?.firstOrNull()?.index ?: 0,
                     scrollOffset
                 )
             }
@@ -60,7 +58,7 @@ internal class LazyGridScrollPosition(
      * c) there will be not enough items to fill the viewport after the requested index, so we
      * would have to compose few elements before the asked index, changing the first visible item.
      */
-    fun requestPosition(index: ItemIndex, scrollOffset: Int) {
+    fun requestPosition(index: Int, scrollOffset: Int) {
         update(index, scrollOffset)
         // clear the stored key as we have a direct request to scroll to [index] position and the
         // next [checkIfFirstVisibleItemWasMoved] shouldn't override this.
@@ -76,14 +74,14 @@ internal class LazyGridScrollPosition(
     fun updateScrollPositionIfTheFirstItemWasMoved(itemProvider: LazyGridItemProvider) {
         Snapshot.withoutReadObservation {
             update(
-                ItemIndex(itemProvider.findIndexByKey(lastKnownFirstItemKey, index.value)),
+                itemProvider.findIndexByKey(lastKnownFirstItemKey, index),
                 scrollOffset
             )
         }
     }
 
-    private fun update(index: ItemIndex, scrollOffset: Int) {
-        require(index.value >= 0f) { "Index should be non-negative (${index.value})" }
+    private fun update(index: Int, scrollOffset: Int) {
+        require(index >= 0f) { "Index should be non-negative ($index)" }
         if (index != this.index) {
             this.index = index
         }
@@ -111,8 +109,8 @@ fun LazyLayoutItemProvider.findIndexByKey(
         // this item is still at the same index
         return lastKnownIndex
     }
-    val newIndex = keyToIndexMap[key]
-    if (newIndex != null) {
+    val newIndex = getIndex(key)
+    if (newIndex != -1) {
         return newIndex
     }
     // fallback to the previous index if we don't know the new index of the item

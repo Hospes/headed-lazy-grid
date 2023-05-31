@@ -36,7 +36,7 @@ publishing {
 }
 
 dependencies {
-    api(platform(libs.androidx.compose.bom))
+    api(platform(libs.androidx.compose.bom.chrisbanes))
     implementation(libs.androidx.compose.ui.util)
     implementation(libs.androidx.compose.foundation)
 }

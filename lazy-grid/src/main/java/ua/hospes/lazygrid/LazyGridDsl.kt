@@ -53,9 +53,8 @@ fun LazyVerticalGrid(
     userScrollEnabled: Boolean = true,
     content: LazyGridScope.() -> Unit
 ) {
-    val slotSizesSums = rememberColumnWidthSums(columns, horizontalArrangement, contentPadding)
     LazyGrid(
-        slotSizesSums = slotSizesSums,
+        slots = rememberColumnWidthSums(columns, horizontalArrangement, contentPadding),
         modifier = modifier,
         state = state,
         contentPadding = contentPadding,
@@ -107,9 +106,8 @@ fun LazyHorizontalGrid(
     userScrollEnabled: Boolean = true,
     content: LazyGridScope.() -> Unit
 ) {
-    val slotSizesSums = rememberRowHeightSums(rows, verticalArrangement, contentPadding)
     LazyGrid(
-        slotSizesSums = slotSizesSums,
+        slots = rememberRowHeightSums(rows, verticalArrangement, contentPadding),
         modifier = modifier,
         state = state,
         contentPadding = contentPadding,
@@ -129,12 +127,12 @@ private fun rememberColumnWidthSums(
     columns: GridCells,
     horizontalArrangement: Arrangement.Horizontal,
     contentPadding: PaddingValues
-) = remember<Density.(Constraints) -> List<Int>>(
+) = remember<Density.(Constraints) -> LazyGridSlots>(
     columns,
     horizontalArrangement,
     contentPadding,
 ) {
-    { constraints ->
+    GridSlotCache { constraints ->
         require(constraints.maxWidth != Constraints.Infinity) {
             "LazyVerticalGrid's width should be bound by parent."
         }
@@ -145,10 +143,12 @@ private fun rememberColumnWidthSums(
             calculateCrossAxisCellSizes(
                 gridWidth,
                 horizontalArrangement.spacing.roundToPx()
-            ).toMutableList().apply {
-                for (i in 1 until size) {
-                    this[i] += this[i - 1]
+            ).toIntArray().let { sizes ->
+                val positions = IntArray(sizes.size)
+                with(horizontalArrangement) {
+                    arrange(gridWidth, sizes, LayoutDirection.Ltr, positions)
                 }
+                LazyGridSlots(sizes, positions)
             }
         }
     }
@@ -160,12 +160,12 @@ private fun rememberRowHeightSums(
     rows: GridCells,
     verticalArrangement: Arrangement.Vertical,
     contentPadding: PaddingValues
-) = remember<Density.(Constraints) -> List<Int>>(
+) = remember<Density.(Constraints) -> LazyGridSlots>(
     rows,
     verticalArrangement,
     contentPadding,
 ) {
-    { constraints ->
+    GridSlotCache { constraints ->
         require(constraints.maxHeight != Constraints.Infinity) {
             "LazyHorizontalGrid's height should be bound by parent."
         }
@@ -176,10 +176,39 @@ private fun rememberRowHeightSums(
             calculateCrossAxisCellSizes(
                 gridHeight,
                 verticalArrangement.spacing.roundToPx()
-            ).toMutableList().apply {
-                for (i in 1 until size) {
-                    this[i] += this[i - 1]
+            ).toIntArray().let { sizes ->
+                val positions = IntArray(sizes.size)
+                with(verticalArrangement) {
+                    arrange(gridHeight, sizes, positions)
                 }
+                LazyGridSlots(sizes, positions)
+            }
+        }
+    }
+}
+
+/** measurement cache to avoid recalculating row/column sizes on each scroll. */
+private class GridSlotCache(
+    private val calculation: Density.(Constraints) -> LazyGridSlots
+) : (Density, Constraints) -> LazyGridSlots {
+    private var cachedConstraints = Constraints()
+    private var cachedDensity: Float = 0f
+    private var cachedSizes: LazyGridSlots? = null
+
+    override fun invoke(density: Density, constraints: Constraints): LazyGridSlots {
+        with(density) {
+            if (
+                cachedSizes != null &&
+                cachedConstraints == constraints &&
+                cachedDensity == this.density
+            ) {
+                return cachedSizes!!
+            }
+
+            cachedConstraints = constraints
+            cachedDensity = this.density
+            return calculation(constraints).also {
+                cachedSizes = it
             }
         }
     }
