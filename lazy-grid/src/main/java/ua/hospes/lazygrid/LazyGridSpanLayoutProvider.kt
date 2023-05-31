@@ -201,7 +201,7 @@ internal class LazyGridSpanLayoutProvider(private val itemProvider: LazyGridItem
         return LineIndex(currentLine)
     }
 
-    private fun spanOf(itemIndex: Int, maxSpan: Int) = with(itemProvider) {
+    fun spanOf(itemIndex: Int, maxSpan: Int) = with(itemProvider) {
         with(LazyGridItemSpanScopeImpl) {
             maxCurrentLineSpan = maxSpan
             maxLineSpan = slotsPerLine
