@@ -74,6 +74,10 @@ internal class LazyGridSpanLayoutProvider(private val gridContent: LazyGridInter
         }
 
         val bucketIndex = min(lineIndex / bucketSize, buckets.size - 1)
+        // Check for OutOfBoundsException
+        if(bucketIndex == -1) {
+            return LineConfiguration(0, emptyList())
+        }
         // We can calculate the items on the line from the closest cached bucket start item.
         var currentLine = bucketIndex * bucketSize
         var currentItemIndex = buckets[bucketIndex].firstItemIndex
