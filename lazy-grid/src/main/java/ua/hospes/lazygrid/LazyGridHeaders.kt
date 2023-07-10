@@ -22,8 +22,6 @@ internal fun findOrComposeLazyGridHeader(
     layoutHeight: Int,
 ): LazyGridPositionedItem? {
     var currentHeaderOffset: Int = Int.MIN_VALUE
-    var currentHeaderCrossAxisOffset: Int = Int.MIN_VALUE
-    var currentHeaderCrossAxisSize: Int = 0
     var nextHeaderOffset: Int = Int.MIN_VALUE
 
     var currentHeaderListPosition = -1
@@ -46,8 +44,6 @@ internal fun findOrComposeLazyGridHeader(
         if (item.index == currentHeaderListPosition) {
             indexInComposedVisibleItems = index
             currentHeaderOffset = item.getMainAxisOffset()
-            currentHeaderCrossAxisOffset = item.getCrossAxisOffset()
-            currentHeaderCrossAxisSize = item.getCrossAxisSize()
         } else {
             if (item.index == nextHeaderListPosition) {
                 nextHeaderOffset = item.getMainAxisOffset()
@@ -79,7 +75,6 @@ internal fun findOrComposeLazyGridHeader(
     if (nextHeaderOffset != Int.MIN_VALUE) {
         headerOffset = minOf(headerOffset, nextHeaderOffset - measuredHeaderItem.mainAxisSize)
     }
-    var headerCrossAxisOffset = currentHeaderCrossAxisOffset
 
     return measuredHeaderItem.position(
         mainAxisOffset = headerOffset,
