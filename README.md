@@ -11,3 +11,4 @@ Version compatibility:
 * `0.8.0` compatible with Jetpack Compose 1.5.0-beta01
 * `0.8.1` compatible with Jetpack Compose 1.5.0-beta03
 * `0.8.2` compatible with Jetpack Compose 1.5.0
+* `0.9.0` compatible with Jetpack Compose 1.6.0-alpha03
