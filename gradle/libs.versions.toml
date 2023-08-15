@@ -7,7 +7,7 @@ minSdk = "21"
 kotlin = "1.9.0"
 kotlinx-coroutines = "1.7.3"
 #Compose
-compose = "1.5.0"
+compose = "1.6.0-alpha03"
 composecompiler = "1.5.1"
 #Others
 lifecycle = "2.6.1"
