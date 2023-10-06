@@ -38,4 +38,5 @@ publishing {
 dependencies {
     implementation(libs.androidx.compose.ui.util)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.timber)
 }

@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "ua.hospes.lazygrid"
+    namespace = "ua.hospes.sample"
 
     defaultConfig {
         applicationId = "ua.hospes.lazygrid"
@@ -33,4 +33,6 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(project(":lazy-grid"))
+
+    implementation(libs.timber)
 }
