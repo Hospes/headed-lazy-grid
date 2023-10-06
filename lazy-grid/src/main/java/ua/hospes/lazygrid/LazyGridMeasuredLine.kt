@@ -1,7 +1,5 @@
 package ua.hospes.lazygrid
 
-import androidx.compose.foundation.lazy.grid.items
-
 /**
  * Represents one measured line of the lazy list. Each item on the line can in fact consist of
  * multiple placeables if the user emit multiple layout nodes in the item callback.
@@ -49,9 +47,9 @@ internal class LazyGridMeasuredLine constructor(
         offset: Int,
         layoutWidth: Int,
         layoutHeight: Int
-    ): List<LazyGridPositionedItem> {
+    ): Array<LazyGridMeasuredItem> {
         var usedSpan = 0
-        return items.mapIndexed { itemIndex, item ->
+        items.forEachIndexed { itemIndex, item ->
             val span = spans[itemIndex].currentLineSpan
             val startSlot = usedSpan
 
@@ -66,5 +64,6 @@ internal class LazyGridMeasuredLine constructor(
                 usedSpan += span
             }
         }
+        return items
     }
 }

@@ -7,11 +7,10 @@ import androidx.compose.ui.unit.Constraints
 /**
  * Abstracts away the subcomposition from the measuring logic.
  */
-internal class LazyGridMeasuredItemProvider constructor(
+internal abstract class LazyGridMeasuredItemProvider constructor(
     private val itemProvider: LazyGridItemProvider,
     private val measureScope: LazyLayoutMeasureScope,
     private val defaultMainAxisSpacing: Int,
-    private val measuredItemFactory: MeasuredItemFactory
 ) {
     /**
      * Used to subcompose individual items of lazy grids. Composed placeables will be measured
@@ -22,16 +21,16 @@ internal class LazyGridMeasuredItemProvider constructor(
         mainAxisSpacing: Int = defaultMainAxisSpacing,
         constraints: Constraints
     ): LazyGridMeasuredItem {
-        val key = keyIndexMap.getKey(index) ?: itemProvider.getKey(index)
+        val key = itemProvider.getKey(index)
         val contentType = itemProvider.getContentType(index)
         val placeables = measureScope.measure(index, constraints)
         val crossAxisSize = if (constraints.hasFixedWidth) {
             constraints.minWidth
         } else {
-            require(constraints.hasFixedHeight)
+            require(constraints.hasFixedHeight) { "does not have fixed height" }
             constraints.minHeight
         }
-        return measuredItemFactory.createItem(
+        return createItem(
             index,
             key,
             contentType,
@@ -45,12 +44,9 @@ internal class LazyGridMeasuredItemProvider constructor(
      * Contains the mapping between the key and the index. It could contain not all the items of
      * the list as an optimization.
      **/
-    val keyIndexMap: LazyLayoutKeyIndexMap = itemProvider.keyIndexMap
-}
+    val keyIndexMap: LazyLayoutKeyIndexMap get() = itemProvider.keyIndexMap
 
-// This interface allows to avoid autoboxing on index param
-internal fun interface MeasuredItemFactory {
-    fun createItem(
+    abstract fun createItem(
         index: Int,
         key: Any,
         contentType: Any?,

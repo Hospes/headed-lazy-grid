@@ -11,27 +11,28 @@ import androidx.compose.ui.util.fastForEach
  * if the user emit multiple layout nodes in the item callback.
  */
 internal class LazyGridMeasuredItem(
-    val index: Int,
-    val key: Any,
-    private val isVertical: Boolean,
+    override val index: Int,
+    override val key: Any,
+    val isVertical: Boolean,
     /**
      * Cross axis size is the same for all [placeables]. Take it as parameter for the case when
      * [placeables] is empty.
      */
     val crossAxisSize: Int,
-    val mainAxisSpacing: Int,
+    mainAxisSpacing: Int,
     private val reverseLayout: Boolean,
     private val layoutDirection: LayoutDirection,
     private val beforeContentPadding: Int,
     private val afterContentPadding: Int,
-    val placeables: List<Placeable>,
+    private val placeables: List<Placeable>,
     /**
      * The offset which shouldn't affect any calculations but needs to be applied for the final
      * value passed into the place() call.
      */
     private val visualOffset: IntOffset,
-    private val contentType: Any?
-) {
+    override val contentType: Any?,
+    private val animator: LazyGridItemPlacementAnimator
+) : LazyGridItemInfo {
     /**
      * Main axis size of the item - the max main axis size of the placeables.
      */
@@ -44,6 +45,10 @@ internal class LazyGridMeasuredItem(
 
     val placeablesCount: Int get() = placeables.size
 
+    private var mainAxisLayoutSize: Int = Unset
+    private var minMainAxisOffset: Int = 0
+    private var maxMainAxisOffset: Int = 0
+
     fun getParentData(index: Int) = placeables[index].parentData
 
     init {
@@ -54,6 +59,20 @@ internal class LazyGridMeasuredItem(
         mainAxisSize = maxMainAxis
         mainAxisSizeWithSpacings = (maxMainAxis + mainAxisSpacing).coerceAtLeast(0)
     }
+
+    override val size: IntSize = if (isVertical) {
+        IntSize(crossAxisSize, mainAxisSize)
+    } else {
+        IntSize(mainAxisSize, crossAxisSize)
+    }
+    override var offset: IntOffset = IntOffset.Zero
+        private set
+    val mainAxisOffset get() = if (isVertical) offset.y else offset.x
+    val crossAxisOffset get() = if (isVertical) offset.x else offset.y
+    override var row: Int = LazyGridItemInfo.UnknownRow
+        private set
+    override var column: Int = LazyGridItemInfo.UnknownColumn
+        private set
 
     /**
      * Calculates positions for the inner placeables at [mainAxisOffset], [crossAxisOffset].
@@ -67,10 +86,10 @@ internal class LazyGridMeasuredItem(
         crossAxisOffset: Int,
         layoutWidth: Int,
         layoutHeight: Int,
-        row: Int,
-        column: Int
-    ): LazyGridPositionedItem {
-        val mainAxisLayoutSize = if (isVertical) layoutHeight else layoutWidth
+        row: Int = LazyGridItemInfo.UnknownRow,
+        column: Int = LazyGridItemInfo.UnknownColumn
+    ) {
+        mainAxisLayoutSize = if (isVertical) layoutHeight else layoutWidth
         val crossAxisLayoutSize = if (isVertical) layoutWidth else layoutHeight
 
         @Suppress("NAME_SHADOWING")
@@ -79,31 +98,56 @@ internal class LazyGridMeasuredItem(
         } else {
             crossAxisOffset
         }
-        return LazyGridPositionedItem(
-            offset = if (isVertical) {
-                IntOffset(crossAxisOffset, mainAxisOffset)
-            } else {
-                IntOffset(mainAxisOffset, crossAxisOffset)
-            },
-            index = index,
-            key = key,
-            row = row,
-            column = column,
-            size = if (isVertical) {
-                IntSize(crossAxisSize, mainAxisSize)
-            } else {
-                IntSize(mainAxisSize, crossAxisSize)
-            },
-            minMainAxisOffset = -beforeContentPadding,
-            maxMainAxisOffset = mainAxisLayoutSize + afterContentPadding,
-            isVertical = isVertical,
-            placeables = placeables,
-            visualOffset = visualOffset,
-            mainAxisLayoutSize = mainAxisLayoutSize,
-            reverseLayout = reverseLayout,
-            contentType = contentType,
-        )
+        offset = if (isVertical) {
+            IntOffset(crossAxisOffset, mainAxisOffset)
+        } else {
+            IntOffset(mainAxisOffset, crossAxisOffset)
+        }
+        this.row = row
+        this.column = column
+        minMainAxisOffset = -beforeContentPadding
+        maxMainAxisOffset = mainAxisLayoutSize + afterContentPadding
     }
+
+    fun place(
+        scope: Placeable.PlacementScope,
+    ) = with(scope) {
+        require(mainAxisLayoutSize != Unset) { "position() should be called first" }
+        repeat(placeablesCount) { index ->
+            val placeable = placeables[index]
+            val minOffset = minMainAxisOffset - placeable.mainAxisSize
+            val maxOffset = maxMainAxisOffset
+
+            var offset = offset
+            val animation = animator.getAnimation(key, index)
+            if (animation != null) {
+                val animatedOffset = offset + animation.placementDelta
+                // cancel the animation if current and target offsets are both out of the bounds.
+                if ((offset.mainAxis <= minOffset && animatedOffset.mainAxis <= minOffset) ||
+                    (offset.mainAxis >= maxOffset && animatedOffset.mainAxis >= maxOffset)
+                ) {
+                    animation.cancelPlacementAnimation()
+                }
+                offset = animatedOffset
+            }
+            if (reverseLayout) {
+                offset = offset.copy { mainAxisOffset ->
+                    mainAxisLayoutSize - mainAxisOffset - placeable.mainAxisSize
+                }
+            }
+            offset += visualOffset
+            if (isVertical) {
+                placeable.placeWithLayer(offset)
+            } else {
+                placeable.placeRelativeWithLayer(offset)
+            }
+        }
+    }
+
+    private val IntOffset.mainAxis get() = if (isVertical) y else x
+    private val Placeable.mainAxisSize get() = if (isVertical) height else width
+    private inline fun IntOffset.copy(mainAxisMap: (Int) -> Int): IntOffset =
+        IntOffset(if (isVertical) x else mainAxisMap(x), if (isVertical) mainAxisMap(y) else y)
 }
 
 internal class LazyGridPositionedItem(
@@ -173,3 +217,5 @@ internal class LazyGridPositionedItem(
     private inline fun IntOffset.copy(mainAxisMap: (Int) -> Int): IntOffset =
         IntOffset(if (isVertical) x else mainAxisMap(x), if (isVertical) mainAxisMap(y) else y)
 }
+
+private const val Unset = Int.MIN_VALUE

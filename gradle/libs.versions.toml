@@ -1,16 +1,16 @@
 [versions]
-agp = "8.1.0"
+agp = "8.1.2"
 compileSdk = "34"
 targetSdk = "34"
 minSdk = "21"
 #Kotlin
-kotlin = "1.9.0"
+kotlin = "1.9.10"
 kotlinx-coroutines = "1.7.3"
 #Compose
-compose = "1.6.0-alpha03"
-composecompiler = "1.5.1"
+compose = "1.6.0-alpha07"
+composecompiler = "1.5.3"
 #Others
-lifecycle = "2.6.1"
+lifecycle = "2.6.2"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -24,9 +24,9 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 
 #Androidx
-androidx-core = { module = "androidx.core:core-ktx", version = "1.12.0-rc01" }
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.7.2" }
-androidx-compose-bom = { module = "androidx.compose:compose-bom", version = "2023.08.00" } # compose = 1.4.3
+androidx-core = { module = "androidx.core:core-ktx", version = "1.12.0" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.8.0" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version = "2023.10.00" } # compose = 1.4.3
 #androidx-compose-bom-chrisbanes = { module = "dev.chrisbanes.compose:compose-bom", version = "2023.04.00-beta01" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
 androidx-compose-ui-util = { module = "androidx.compose.ui:ui-util", version.ref = "compose" }

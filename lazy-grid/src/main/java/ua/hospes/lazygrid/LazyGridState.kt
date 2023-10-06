@@ -13,6 +13,7 @@ import androidx.compose.runtime.collection.mutableVectorOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.layout.Remeasurement
 import androidx.compose.ui.layout.RemeasurementModifier
 import androidx.compose.ui.unit.Constraints
@@ -175,7 +176,7 @@ class LazyGridState constructor(
      * The [Remeasurement] object associated with our layout. It allows us to remeasure
      * synchronously during scroll.
      */
-    private var remeasurement: Remeasurement? by mutableStateOf(null)
+    internal var remeasurement: Remeasurement? by mutableStateOf(null)
 
     /**
      * The modifier which provides [remeasurement].
@@ -208,6 +209,8 @@ class LazyGridState constructor(
      * Stores currently pinned items which are always composed.
      */
     internal val pinnedItems = LazyLayoutPinnedItemList()
+
+    internal val nearestRange: IntRange by scrollPosition.nearestRangeState
 
     /**
      * Instantly brings the item at [index] to the top of the viewport, offset by [scrollOffset]
@@ -401,9 +404,10 @@ class LazyGridState constructor(
      * items added or removed before our current first visible item and keep this item
      * as the first visible one even given that its index has been changed.
      */
-    internal fun updateScrollPositionIfTheFirstItemWasMoved(itemProvider: LazyGridItemProvider) {
-        scrollPosition.updateScrollPositionIfTheFirstItemWasMoved(itemProvider)
-    }
+    internal fun updateScrollPositionIfTheFirstItemWasMoved(
+        itemProvider: LazyGridItemProvider,
+        firstItemIndex: Int = Snapshot.withoutReadObservation { scrollPosition.index }
+    ): Int = scrollPosition.updateScrollPositionIfTheFirstItemWasMoved(itemProvider, firstItemIndex)
 
     companion object {
         /**

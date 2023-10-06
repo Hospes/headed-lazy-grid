@@ -13,14 +13,14 @@ import androidx.compose.ui.util.fastForEachIndexed
  * @param beforeContentPadding the padding before the first item in the list
  */
 internal fun findOrComposeLazyGridHeader(
-    composedVisibleItems: MutableList<LazyGridPositionedItem>,
-    measuredItemProvider: LazyGridMeasuredItemProvider,
+    composedVisibleItems: MutableList<LazyGridMeasuredItem>,
+    itemProvider: LazyGridMeasuredItemProvider,
     headerIndexes: List<Int>,
     isVertical: Boolean,
     beforeContentPadding: Int,
     layoutWidth: Int,
     layoutHeight: Int,
-): LazyGridPositionedItem? {
+): LazyGridMeasuredItem? {
     var currentHeaderOffset: Int = Int.MIN_VALUE
     var nextHeaderOffset: Int = Int.MIN_VALUE
 
@@ -43,10 +43,10 @@ internal fun findOrComposeLazyGridHeader(
     composedVisibleItems.fastForEachIndexed { index, item ->
         if (item.index == currentHeaderListPosition) {
             indexInComposedVisibleItems = index
-            currentHeaderOffset = item.getMainAxisOffset()
+            currentHeaderOffset = item.mainAxisOffset
         } else {
             if (item.index == nextHeaderListPosition) {
-                nextHeaderOffset = item.getMainAxisOffset()
+                nextHeaderOffset = item.mainAxisOffset
             }
         }
     }
@@ -56,7 +56,7 @@ internal fun findOrComposeLazyGridHeader(
         return null
     }
 
-    val measuredHeaderItem = measuredItemProvider.getAndMeasure(
+    val measuredHeaderItem = itemProvider.getAndMeasure(
         index = currentHeaderListPosition,
         constraints = if (isVertical) {
             Constraints.fixedWidth(layoutWidth)
@@ -76,19 +76,18 @@ internal fun findOrComposeLazyGridHeader(
         headerOffset = minOf(headerOffset, nextHeaderOffset - measuredHeaderItem.mainAxisSize)
     }
 
-    return measuredHeaderItem.position(
+    measuredHeaderItem.position(
         mainAxisOffset = headerOffset,
         crossAxisOffset = 0,//headerCrossAxisOffset,
         layoutWidth = layoutWidth,
         layoutHeight = layoutHeight,
         row = LazyGridItemInfo.UnknownRow,
         column = LazyGridItemInfo.UnknownColumn,
-        //lineMainAxisSize = measuredHeaderItem.mainAxisSize
-    ).also {
-        if (indexInComposedVisibleItems != -1) {
-            composedVisibleItems[indexInComposedVisibleItems] = it
-        } else {
-            composedVisibleItems.add(0, it)
-        }
+    )
+    if (indexInComposedVisibleItems != -1) {
+        composedVisibleItems[indexInComposedVisibleItems] = measuredHeaderItem
+    } else {
+        composedVisibleItems.add(0, measuredHeaderItem)
     }
+    return measuredHeaderItem
 }
