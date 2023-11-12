@@ -1,16 +1,16 @@
 [versions]
-agp = "8.1.2"
+agp = "8.2.0-rc03"
 compileSdk = "34"
 targetSdk = "34"
 minSdk = "21"
 #Kotlin
-kotlin = "1.9.10"
+kotlin = "1.9.20"
 kotlinx-coroutines = "1.7.3"
 #Compose
-compose = "1.6.0-alpha07"
-composecompiler = "1.5.3"
+compose = "1.6.0-alpha08"
+composecompiler = "1.5.4"
 #Others
-lifecycle = "2.6.2"
+lifecycle = "2.7.0-beta01"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -26,8 +26,6 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 #Androidx
 androidx-core = { module = "androidx.core:core-ktx", version = "1.12.0" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.8.0" }
-androidx-compose-bom = { module = "androidx.compose:compose-bom", version = "2023.10.00" } # compose = 1.4.3
-#androidx-compose-bom-chrisbanes = { module = "dev.chrisbanes.compose:compose-bom", version = "2023.04.00-beta01" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
 androidx-compose-ui-util = { module = "androidx.compose.ui:ui-util", version.ref = "compose" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
@@ -38,6 +36,6 @@ androidx-compose-material = { module = "androidx.compose.material:material", ver
 lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 
 timber = { module = "com.jakewharton.timber:timber", version = "5.0.1" }
-coreDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.3" }
+coreDesugaring = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.4" }
 
 [bundles]
