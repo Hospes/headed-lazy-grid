@@ -64,6 +64,7 @@ internal fun findOrComposeLazyGridHeader(
             Constraints.fixedHeight(layoutHeight)
         }
     )
+    measuredHeaderItem.nonScrollableItem = true
 
     var headerOffset = if (currentHeaderOffset != Int.MIN_VALUE) {
         maxOf(-beforeContentPadding, currentHeaderOffset)

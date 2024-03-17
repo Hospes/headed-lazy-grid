@@ -76,8 +76,6 @@ internal fun LazyGrid(
 
     state.isVertical = isVertical
 
-    ScrollPositionUpdater(itemProviderLambda, state)
-
     val orientation = if (isVertical) Orientation.Vertical else Orientation.Horizontal
     LazyLayout(
         modifier = modifier
@@ -117,18 +115,6 @@ internal fun LazyGrid(
         measurePolicy = measurePolicy,
         itemProvider = itemProviderLambda
     )
-}
-
-/** Extracted to minimize the recomposition scope */
-@Composable
-private fun ScrollPositionUpdater(
-    itemProviderLambda: () -> LazyGridItemProvider,
-    state: LazyGridState
-) {
-    val itemProvider = itemProviderLambda()
-    if (itemProvider.itemCount > 0) {
-        state.updateScrollPositionIfTheFirstItemWasMoved(itemProvider)
-    }
 }
 
 /** lazy grid slots configuration */
@@ -352,6 +338,7 @@ private fun rememberLazyGridMeasurePolicy(
             spanLayoutProvider = spanLayoutProvider,
             pinnedItems = pinnedItems,
             coroutineScope = coroutineScope,
+            placementScopeInvalidator = state.placementScopeInvalidator,
             layout = { width, height, placement ->
                 layout(
                     containerConstraints.constrainWidth(width + totalHorizontalPadding),

@@ -45,6 +45,7 @@ internal fun measureLazyGrid(
     spanLayoutProvider: LazyGridSpanLayoutProvider,
     pinnedItems: List<Int>,
     coroutineScope: CoroutineScope,
+    placementScopeInvalidator: ObservableScopeInvalidator,
     layout: (Int, Int, Placeable.PlacementScope.() -> Unit) -> MeasureResult
 ): LazyGridMeasureResult {
     require(beforeContentPadding >= 0) { "negative beforeContentPadding" }
@@ -64,7 +65,8 @@ internal fun measureLazyGrid(
             reverseLayout = reverseLayout,
             orientation = if (isVertical) Orientation.Vertical else Orientation.Horizontal,
             afterContentPadding = afterContentPadding,
-            mainAxisItemSpacing = spaceBetweenLines
+            mainAxisItemSpacing = spaceBetweenLines,
+            remeasureNeeded = false
         )
     } else {
         var currentFirstLineIndex = firstVisibleLineIndex
@@ -120,10 +122,23 @@ internal fun measureLazyGrid(
         val maxMainAxis = (maxOffset + afterContentPadding).coerceAtLeast(0)
         var currentMainAxisOffset = -currentFirstLineScrollOffset
 
+        // will be set to true if we composed some items only to know their size and apply scroll,
+        // while in the end this item will not end up in the visible viewport. we will need an
+        // extra remeasure in order to dispose such items.
+        var remeasureNeeded = false
+
         // first we need to skip lines we already composed while composing backward
-        visibleLines.fastForEach {
-            index++
-            currentMainAxisOffset += it.mainAxisSizeWithSpacings
+        var indexInVisibleLines = 0
+        while (indexInVisibleLines < visibleLines.size) {
+            if (currentMainAxisOffset >= maxMainAxis) {
+                // this item is out of the bounds and will not be visible.
+                visibleLines.removeAt(indexInVisibleLines)
+                remeasureNeeded = true
+            } else {
+                index++
+                currentMainAxisOffset += visibleLines[indexInVisibleLines].mainAxisSizeWithSpacings
+                indexInVisibleLines++
+            }
         }
 
         // then composing visible lines forward until we fill the whole viewport.
@@ -146,6 +161,7 @@ internal fun measureLazyGrid(
                 // this line is offscreen and will not be placed. advance firstVisibleLineIndex
                 currentFirstLineIndex = index + 1
                 currentFirstLineScrollOffset -= measuredLine.mainAxisSizeWithSpacings
+                remeasureNeeded = true
             } else {
                 visibleLines.add(measuredLine)
             }
@@ -290,6 +306,8 @@ internal fun measureLazyGrid(
                 }
                 // the header item should be placed (drawn) after all other items
                 headerItem?.place(this)
+                // we attach it during the placement so LazyGridState can trigger re-placement
+                placementScopeInvalidator.attachToScope()
             },
             viewportStartOffset = -beforeContentPadding,
             viewportEndOffset = mainAxisAvailableSize + afterContentPadding,
@@ -304,7 +322,8 @@ internal fun measureLazyGrid(
             reverseLayout = reverseLayout,
             orientation = if (isVertical) Orientation.Vertical else Orientation.Horizontal,
             afterContentPadding = afterContentPadding,
-            mainAxisItemSpacing = spaceBetweenLines
+            mainAxisItemSpacing = spaceBetweenLines,
+            remeasureNeeded = remeasureNeeded
         )
     }
 }
