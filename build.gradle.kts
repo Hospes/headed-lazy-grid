@@ -25,11 +25,11 @@ allprojects {
 
 fun Project.configureAndroidProject() {
     extensions.configure<BaseExtension> {
-        compileSdkVersion(libs.versions.compileSdk.get().toInt())
+        compileSdkVersion(34)
 
         defaultConfig {
-            minSdk = libs.versions.minSdk.get().toInt()
-            targetSdk = libs.versions.targetSdk.get().toInt()
+            minSdk = 21
+            targetSdk = 34
         }
 
         // Can remove this once https://issuetracker.google.com/issues/260059413 is fixed.
@@ -51,5 +51,5 @@ fun Project.configureAndroidProject() {
 
 // Remove also build folder in root folder
 tasks.register<Delete>("clean") {
-    delete.add(rootProject.buildDir)
+    delete.add(rootProject.layout.buildDirectory)
 }

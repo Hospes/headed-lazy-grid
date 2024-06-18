@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -16,23 +17,13 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composecompiler.get()
-    }
 }
 
 dependencies {
-    implementation(libs.androidx.core)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.lifecycle.runtime.compose)
 
     implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.util)
     implementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.compose.material)
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.foundation.layout)
     implementation(project(":lazy-grid"))
-
-    implementation(libs.timber)
 }
