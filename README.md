@@ -1,4 +1,8 @@
 # headed-lazy-grid
+
+> [!WARNING]  
+> This repo is archived and won't be updated anymore as native stickHeaders functionality were implemented in jetpack compose 1.8.x (currently alpha)
+
 Jetpack Compose LazyGrid with sticky headers implementation
 
 [![](https://jitpack.io/v/Hospes/headed-lazy-grid.svg)](https://jitpack.io/#Hospes/headed-lazy-grid)
