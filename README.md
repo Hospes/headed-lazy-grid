@@ -1,7 +1,11 @@
 # headed-lazy-grid
 
 > [!WARNING]  
-> This repo is archived and won't be updated anymore as native stickHeaders functionality were implemented in jetpack compose 1.8.x (currently alpha)
+> This repo is archived and won't get any update anymore
+> 
+> Native `stickHeaders` functionality were implemented in Jetpack Compose [1.8.0-alpha01](https://developer.android.com/jetpack/androidx/releases/compose-foundation#1.8.0-alpha01)
+>
+> For more details check commit [Introduce sticky headers for Grids](https://android.googlesource.com/platform/frameworks/support/+/9fb74db746d1975a3f4f0d0ad224cdcd4cd69170) and [issue](https://issuetracker.google.com/issues/231557184) on issue tracker
 
 Jetpack Compose LazyGrid with sticky headers implementation
 
