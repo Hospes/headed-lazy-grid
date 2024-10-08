@@ -12,7 +12,7 @@ allprojects {
     plugins.withType<JavaBasePlugin>().configureEach {
         extensions.configure<JavaPluginExtension> {
             toolchain {
-                languageVersion.set(JavaLanguageVersion.of(17))
+                languageVersion.set(JavaLanguageVersion.of(21))
             }
         }
     }
@@ -25,18 +25,18 @@ allprojects {
 
 fun Project.configureAndroidProject() {
     extensions.configure<BaseExtension> {
-        compileSdkVersion(34)
+        compileSdkVersion(35)
 
         defaultConfig {
             minSdk = 21
-            targetSdk = 34
+            targetSdk = 35
         }
 
         // Can remove this once https://issuetracker.google.com/issues/260059413 is fixed.
         // See https://kotlinlang.org/docs/gradle-configure-project.html#gradle-java-toolchains-support
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
+            sourceCompatibility = JavaVersion.VERSION_21
+            targetCompatibility = JavaVersion.VERSION_21
 
             // https://developer.android.com/studio/write/java8-support
             isCoreLibraryDesugaringEnabled = true
